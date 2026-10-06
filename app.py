@@ -53,7 +53,7 @@ if uploads:
         st.text(file.name)
 
 analyze = st.button("Analisis file", key="nm_analyze", type="primary",
-                    disabled=not uploads, use_container_width=True)
+                    disabled=not uploads, width="stretch")
 if analyze:
     reset_work()
 
@@ -85,7 +85,7 @@ if analysis is not None:
             {"Mapel": info["output_name"], "ZIP sumber": source_zip,
              "File sumber": rel_path, "Baris": len(df)}
             for info in analysis.groups.values() for source_zip, rel_path, df in info["entries"]
-        ], use_container_width=True, hide_index=True)
+        ], width="stretch", hide_index=True)
 
     decisions = {}
     pending = 0
@@ -124,7 +124,7 @@ if analysis is not None:
              "Kelompok asal": ", ".join(analysis.groups[k]["output_name"] for k in info["members"]),
              "File": len(info["entries"])}
             for info in groups.values()
-        ], use_container_width=True, hide_index=True)
+        ], width="stretch", hide_index=True)
     except ValueError as exc:
         conflict = True
         st.error(str(exc))
@@ -135,7 +135,7 @@ if analysis is not None:
         st.error("Tidak ada CSV yang berhasil dibaca. Periksa warning/error dan upload ZIP yang valid.")
 
     if st.button("Proses hasil review", key="nm_process", type="primary",
-                 disabled=bool(pending or conflict or not analysis.groups), use_container_width=True):
+                 disabled=bool(pending or conflict or not analysis.groups), width="stretch"):
         st.session_state.pop("nm_result", None)
         st.session_state.pop("nm_error", None)
         try:
@@ -158,10 +158,10 @@ if analysis is not None:
         show_diagnostics(result.warnings, result.errors)
         if not result.audit.empty:
             st.subheader("Audit hasil")
-            st.dataframe(result.audit, use_container_width=True, hide_index=True)
+            st.dataframe(result.audit, width="stretch", hide_index=True)
         st.download_button(
             "⬇️ Download hasil ZIP", data=result.zip_bytes, file_name=result.output_filename,
-            mime="application/zip", type="primary", use_container_width=True,
+            mime="application/zip", type="primary", width="stretch",
         )
 
 if st.session_state.get("nm_error"):
