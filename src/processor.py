@@ -142,9 +142,12 @@ def _dedupe_final(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     final = pd.concat([valid_rows, invalid_rows], ignore_index=True)
     final = final.drop(columns=["_id_norm", "_nilai_num", "_row_order"], errors="ignore")
 
-    sort_cols = [c for c in ["Kelas", "Nama"] if c in final.columns]
-    if sort_cols:
-        final = final.sort_values(by=sort_cols, kind="stable").reset_index(drop=True)
+    if "NoPes" in final.columns:
+        final = final.sort_values(
+            by="NoPes",
+            kind="stable",
+            na_position="last",
+        ).reset_index(drop=True)
 
     return final, {
         "sebelum": before_count,
