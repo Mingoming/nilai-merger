@@ -143,10 +143,12 @@ def _dedupe_final(df: pd.DataFrame) -> tuple[pd.DataFrame, dict]:
     final = final.drop(columns=["_id_norm", "_nilai_num", "_row_order"], errors="ignore")
 
     if "NoPes" in final.columns:
+        # Treat blanks as missing only for sorting; preserve displayed NoPes values.
         final = final.sort_values(
             by="NoPes",
             kind="stable",
             na_position="last",
+            key=lambda ids: ids.replace(r"^\s*$", pd.NA, regex=True),
         ).reset_index(drop=True)
 
     return final, {

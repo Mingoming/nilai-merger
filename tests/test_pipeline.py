@@ -82,6 +82,35 @@ class ExistingBehaviorTests(unittest.TestCase):
         self.assertEqual(sorted(result.audit["final"].tolist()), [2, 2])
         self.assertTrue(all(name.endswith(".xlsx") for name in outputs(result)))
 
+    def test_final_output_sorts_nopes_ascending_with_blank_ids_last(self):
+        frame = pd.DataFrame([
+            ["XII A", "Alpha", "12-05-003@example.test", "70", "1"],
+            ["XII A", "Empty", "", "60", "0"],
+            ["XII Z", "Zulu", "12-05-001@example.test", "80", "1"],
+            ["XII A", "Missing", None, "70", "0"],
+            ["XII B", "Middle", "12-05-002@example.test", "90", "1"],
+            ["XII A", "Alpha", "12-05-003@other.example.test", "90,75", "1"],
+            ["XII A", "Whitespace", "   ", "50", "0"],
+        ], columns=HEADERS)
+        cleaned = processor.rename_and_clean(frame)
+        final, audit = processor._dedupe_final(cleaned)
+        expected_ids = ["12-05-001", "12-05-002", "12-05-003"]
+        self.assertEqual(final.NoPes.iloc[:3].tolist(), expected_ids)
+        self.assertEqual(final.Nama.iloc[3:].tolist(), ["Empty", "Missing", "Whitespace"])
+        self.assertEqual(final.NoPes.iloc[3], "")
+        self.assertTrue(pd.isna(final.NoPes.iloc[4]))
+        self.assertEqual(final.NoPes.iloc[5], "")
+        self.assertEqual(final.Nilai.iloc[2], "90,75")
+        self.assertEqual(final.columns.tolist(), cleaned.columns.tolist())
+        self.assertEqual(audit["dihapus"], 1)
+        self.assertEqual(audit["nopes_kosong"], 3)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "final.xlsx"
+            processor.df_to_excel(final, path)
+            exported = pd.read_excel(path, dtype={"NoPes": "string"})
+        self.assertEqual(exported.NoPes.iloc[:3].tolist(), expected_ids)
+        self.assertTrue(exported.NoPes.iloc[3:].isna().all())
+
 
 class ReviewTests(unittest.TestCase):
     def test_candidates_are_deterministic_suggestions_only(self):
